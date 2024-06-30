@@ -1,4 +1,3 @@
-import './App.css';
 import {DemonstratePage} from './views/DemonstratePage';
 
 function App() {
