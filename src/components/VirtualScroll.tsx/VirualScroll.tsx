@@ -132,16 +132,16 @@ export const VirualScroll: React.FC<VirtualScrollProps> = (props) => {
       <table className='w-full'>
         <thead className='bg-gray-800 text-gray-200 text-xs uppercase font-medium border-b-gray-950 border-b-2'>
           <tr className='flex gap-4'>
-            <th scope='col' className='w-1/4  px-5 py-3 tracking-wide'>
+            <th scope='col' className='w-1/4  px-5 py-3 tracking-wide '>
               Avatar
             </th>
-            <th scope='col ' className='w-1/4 px-5 py-3 text-left tracking-wider'>
+            <th scope='col ' className='w-1/4 px-5 py-3 text-left   tracking-wider'>
               Name
             </th>
-            <th scope='col' className='w-1/4 px-5 py-3 text-left tracking-wider'>
+            <th scope='col' className='w-1/4 px-5 py-3 text-left   tracking-wider'>
               Status
             </th>
-            <th scope='col' className='w-1/4 px-5 py-3 text-left tracking-wider'>
+            <th scope='col' className='w-1/4 px-5 py-3 text-left   tracking-wider'>
               Species
             </th>
             <th scope='col' className='w-1/4 px-5 py-3 text-left tracking-wider'>
