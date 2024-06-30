@@ -16,35 +16,36 @@ export interface CharacterData {
   species: string;
   gender: string;
   image: string;
+  key: string;
 }
 
-const setInitialState = ({minIndex, maxIndex, startIndex, itemHeight, amount, tolerance}: VirtualScrollProps) => {
-  const viewportHeight = amount * itemHeight;
-  const totalHeight = (maxIndex - minIndex + 1) * itemHeight;
-  const toleranceHeight = tolerance * itemHeight;
-  const bufferHeight = viewportHeight + 2 * toleranceHeight;
-  const bufferedItems = amount + 2 * tolerance;
+const setInitialState = (
+  {minIndex, startIndex, itemHeight, tolerance}: VirtualScrollProps,
+  totalHeight: number,
+  toleranceHeight: number
+) => {
   const itemsAbove = startIndex - tolerance - minIndex;
   const topPaddingHeight = itemsAbove * itemHeight;
   const bottomPaddingHeight = totalHeight - topPaddingHeight;
-  const initialPosition = topPaddingHeight + toleranceHeight;
   const data: Array<CharacterData> = [];
+  const initialPosition = topPaddingHeight + toleranceHeight;
+
   return {
-    viewportHeight,
-    totalHeight,
-    toleranceHeight,
-    bufferHeight,
-    bufferedItems,
     topPaddingHeight,
     bottomPaddingHeight,
-    initialPosition,
     data,
+    initialPosition,
   };
 };
 
 export const VirualScroll: React.FC<VirtualScrollProps> = (props) => {
-  const viewportHeight = props.amount * props.itemHeight;
-  const [state, setState] = useState(() => setInitialState(props));
+  const {itemHeight, amount, maxIndex, minIndex, tolerance} = props;
+  const totalHeight = (maxIndex - minIndex + 1) * itemHeight;
+  const toleranceHeight = tolerance * itemHeight;
+  const viewportHeight = amount * itemHeight;
+  const bufferedItems = amount + 2 * tolerance;
+  console.log('viewPort', viewportHeight, itemHeight, amount);
+  const [state, setState] = useState(() => setInitialState(props, totalHeight, toleranceHeight));
   const viewportRef = useRef<HTMLTableSectionElement>(null);
 
   async function getData(offset: number, limit: number) {
@@ -54,10 +55,11 @@ export const VirualScroll: React.FC<VirtualScrollProps> = (props) => {
     if (start <= end) {
       try {
         for (let i = start; i <= end; i++) {
-          const {name, status, species, gender, image} = await fetch(
+          const {name, status, species, gender, image, created} = await fetch(
             `https://rickandmortyapi.com/api/character/${i}`
           ).then((response) => response.json());
-          data.push({name, status, species, gender, image});
+          const key = created + name;
+          data.push({name, status, species, gender, image, key});
         }
       } catch (err) {
         console.error(err);
@@ -67,17 +69,19 @@ export const VirualScroll: React.FC<VirtualScrollProps> = (props) => {
   }
 
   async function handleScroll(event: React.UIEvent<HTMLTableSectionElement>) {
-    const {totalHeight, toleranceHeight, bufferedItems} = state;
     const index = props.minIndex + Math.floor((event.currentTarget.scrollTop - toleranceHeight) / props.itemHeight);
     const data = await getData(index, bufferedItems);
-    const topPaddingHeight = Math.max((index - props.minIndex) * props.itemHeight, 0);
-    const bottomPaddingHeight = Math.max(totalHeight - topPaddingHeight - data.length * props.itemHeight, 0);
 
-    setState({
-      ...state,
-      topPaddingHeight,
-      bottomPaddingHeight,
-      data,
+    window.requestAnimationFrame(() => {
+      const topPaddingHeight = Math.floor((index - props.minIndex) * props.itemHeight);
+      const bottomPaddingHeight = Math.floor(totalHeight - topPaddingHeight - data.length * props.itemHeight);
+
+      setState({
+        ...state,
+        topPaddingHeight,
+        bottomPaddingHeight,
+        data,
+      });
     });
   }
 
@@ -100,8 +104,8 @@ export const VirualScroll: React.FC<VirtualScrollProps> = (props) => {
     <div className='w-1/2 shadow overflow-hidden rounded-lg'>
       <table className='w-full'>
         <thead className='bg-gray-800 text-gray-200 text-xs uppercase font-medium border-b-gray-950 border-b-2'>
-          <tr className='block'>
-            <th scope='col' className='px-5 py-3 tracking-wide'>
+          <tr className='flex gap-4'>
+            <th scope='col' className='w-1/4  px-5 py-3 tracking-wide'>
               Avatar
             </th>
             <th scope='col ' className='w-1/4 px-5 py-3 text-left tracking-wider'>
@@ -125,7 +129,7 @@ export const VirualScroll: React.FC<VirtualScrollProps> = (props) => {
           onScroll={handleScroll}>
           <tr style={{height: state.topPaddingHeight}}></tr>
           {state.data.map((character) => {
-            return <Row key={character.name} character={character} height={props.itemHeight} />;
+            return <Row key={character.key} character={character} height={props.itemHeight} />;
           })}
           <tr style={{height: state.bottomPaddingHeight}}></tr>
         </tbody>
