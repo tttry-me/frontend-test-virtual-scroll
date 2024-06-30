@@ -10,9 +10,12 @@ interface VirtualScrollProps {
   tolerance: number;
 }
 
-interface dataItem {
-  index: number;
-  text: string;
+export interface CharacterData {
+  name: string;
+  status: string;
+  species: string;
+  gender: string;
+  image: string;
 }
 
 const setInitialState = ({minIndex, maxIndex, startIndex, itemHeight, amount, tolerance}: VirtualScrollProps) => {
@@ -25,7 +28,7 @@ const setInitialState = ({minIndex, maxIndex, startIndex, itemHeight, amount, to
   const topPaddingHeight = itemsAbove * itemHeight;
   const bottomPaddingHeight = totalHeight - topPaddingHeight;
   const initialPosition = topPaddingHeight + toleranceHeight;
-  const data: Array<dataItem> = [];
+  const data: Array<CharacterData> = [];
   return {
     viewportHeight,
     totalHeight,
@@ -40,27 +43,33 @@ const setInitialState = ({minIndex, maxIndex, startIndex, itemHeight, amount, to
 };
 
 export const VirualScroll: React.FC<VirtualScrollProps> = (props) => {
+  const viewportHeight = props.amount * props.itemHeight;
   const [state, setState] = useState(() => setInitialState(props));
-  const viewportRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLTableSectionElement>(null);
 
-  const getData = (offset: number, limit: number) => {
-    console.log('getData');
-    const data: Array<dataItem> = [];
+  async function getData(offset: number, limit: number) {
+    const data: Array<CharacterData> = [];
     const start = Math.max(props.minIndex, offset);
     const end = Math.min(offset + limit - 1, props.maxIndex);
     if (start <= end) {
-      for (let i = start; i <= end; i++) {
-        data.push({index: i, text: `item ${i}`});
+      try {
+        for (let i = start; i <= end; i++) {
+          const {name, status, species, gender, image} = await fetch(
+            `https://rickandmortyapi.com/api/character/${i}`
+          ).then((response) => response.json());
+          data.push({name, status, species, gender, image});
+        }
+      } catch (err) {
+        console.error(err);
       }
     }
-    console.log('data', data);
     return data;
-  };
+  }
 
-  function handleScroll(event: React.UIEvent<HTMLDivElement>) {
+  async function handleScroll(event: React.UIEvent<HTMLTableSectionElement>) {
     const {totalHeight, toleranceHeight, bufferedItems} = state;
     const index = props.minIndex + Math.floor((event.currentTarget.scrollTop - toleranceHeight) / props.itemHeight);
-    const data = getData(index, bufferedItems);
+    const data = await getData(index, bufferedItems);
     const topPaddingHeight = Math.max((index - props.minIndex) * props.itemHeight, 0);
     const bottomPaddingHeight = Math.max(totalHeight - topPaddingHeight - data.length * props.itemHeight, 0);
 
@@ -70,8 +79,8 @@ export const VirualScroll: React.FC<VirtualScrollProps> = (props) => {
       bottomPaddingHeight,
       data,
     });
-    console.log(state);
   }
+
   useEffect(() => {
     if (viewportRef.current !== null) {
       if (state.initialPosition === 0) {
@@ -79,26 +88,48 @@ export const VirualScroll: React.FC<VirtualScrollProps> = (props) => {
           currentTarget: {
             scrollTop: 0,
           },
-        } as React.UIEvent<HTMLDivElement>;
+        } as React.UIEvent<HTMLTableSectionElement>;
         handleScroll(fakeEvent);
       } else {
-        console.log('else', state.initialPosition);
         viewportRef.current.scrollTop = state.initialPosition;
       }
     }
   }, []);
 
   return (
-    <div
-      className='overflow-y-auto w-full flex-col'
-      style={{height: state.viewportHeight}}
-      ref={viewportRef}
-      onScroll={handleScroll}>
-      <div style={{height: state.topPaddingHeight}}></div>
-      {state.data.map((rowData) => {
-        return <Row key={rowData.index} index={rowData.index} text={rowData.text} />;
-      })}
-      <div style={{height: state.bottomPaddingHeight}}></div>
+    <div className='w-1/2 shadow overflow-hidden rounded-lg'>
+      <table className='w-full'>
+        <thead className='bg-gray-800 text-gray-200 text-xs uppercase font-medium border-b-gray-950 border-b-2'>
+          <tr className='block'>
+            <th scope='col' className='px-5 py-3 tracking-wide'>
+              Avatar
+            </th>
+            <th scope='col ' className='w-1/4 px-5 py-3 text-left tracking-wider'>
+              Name
+            </th>
+            <th scope='col' className='w-1/4 px-5 py-3 text-left tracking-wider'>
+              Status
+            </th>
+            <th scope='col' className='w-1/4 px-5 py-3 text-left tracking-wider'>
+              Species
+            </th>
+            <th scope='col' className='w-1/4 px-5 py-3 text-left tracking-wider'>
+              Gender
+            </th>
+          </tr>
+        </thead>
+        <tbody
+          className='overflow-y-auto block w-full flex-col bg-gray-800'
+          style={{height: viewportHeight}}
+          ref={viewportRef}
+          onScroll={handleScroll}>
+          <tr style={{height: state.topPaddingHeight}}></tr>
+          {state.data.map((character) => {
+            return <Row key={character.name} character={character} height={props.itemHeight} />;
+          })}
+          <tr style={{height: state.bottomPaddingHeight}}></tr>
+        </tbody>
+      </table>
     </div>
   );
 };
