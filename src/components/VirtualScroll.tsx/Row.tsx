@@ -1,25 +1,37 @@
 import {ReactElement} from 'react';
-import {CharacterData} from './VirualScroll';
-import {Avatar} from './Avatar';
+import {RowData} from './VirualScroll';
 
 interface RowProps {
-  character: CharacterData;
+  data: RowData;
   height: number;
 }
 
 export function Row(props: RowProps): ReactElement {
-  console.log(props.height);
+  console.log(props.data);
   return (
-    <tr className='text-white w-full flex gap-4' style={{height: props.height}}>
-      <td className='w-1/4 h-full px-6 py-4 whitespace-nowrap flex place-content-center'>
-        <Avatar image={props.character.image} size={40} />
-      </td>
-      <td title={props.character.name} className='w-1/4 px-6 py-4 whitespace-nowrap overflow-hidden text-ellipsis'>
-        {props.character.name}
-      </td>
-      <td className='w-1/4 h-full px-6 py-4 whitespace-nowrap'>{props.character.status}</td>
-      <td className='w-1/4 h-full px-6 py-4 whitespace-nowrap'>{props.character.species}</td>
-      <td className='w-1/4 h-full px-6 py-4 whitespace-nowrap'>{props.character.gender}</td>
-    </tr>
+    <div className='text-white w-full flex flex-grow-0 gap-4 ' style={{height: props.height}}>
+      <div
+        title={props.data.username}
+        className='text-left w-1/4 px-6 py-4 whitespace-nowrap overflow-hidden text-ellipsis'>
+        {props.data.username}
+      </div>
+      <div
+        title={props.data.name}
+        className='text-left w-1/4 px-6 py-4 whitespace-nowrap overflow-hidden text-ellipsis'>
+        {props.data.name}
+      </div>
+      <div className='text-left w-1/4 h-full px-6 py-4 overflow-hidden whitespace-nowrap text-ellipsis'>
+        {props.data.email}
+      </div>
+      <div className='text-left w-1/4 h-full px-6 py-4 overflow-hidden whitespace-nowrap text-ellipsis'>
+        {props.data.dob}
+      </div>
+      <div className='text-left w-1/4 h-full px-6 py-4 overflow-hidden whitespace-nowrap text-ellipsis'>
+        {props.data.company}
+      </div>
+      <div className='text-left w-1/4 h-full px-6 py-4 overflow-hidden whitespace-nowrap text-ellipsis'>
+        {props.data.address}
+      </div>
+    </div>
   );
 }
