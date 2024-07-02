@@ -1,12 +1,12 @@
 import {ReactElement, useState} from 'react';
 import {SortButton} from './SortButton';
 
-interface TheadProps {
+interface ViewPortHeadProps {
   onUpdateSortField: (label: 'company' | 'name' | 'username', direction: 'up' | 'down') => void;
   onRemoveSortField: () => void;
 }
 
-export function Thead({onUpdateSortField, onRemoveSortField}: TheadProps): ReactElement {
+export function ViewPortHead({onUpdateSortField, onRemoveSortField}: ViewPortHeadProps): ReactElement {
   const [state, setState] = useState<{[key: string]: {isUsedToSort: boolean; direction: 'up' | 'down'}}>({
     username: {
       isUsedToSort: false,

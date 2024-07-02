@@ -1,7 +1,8 @@
-import React, {ReactElement, useEffect, useRef, useState} from 'react';
-import {Row} from './Row';
+import React, {useEffect, useRef, useState} from 'react';
 import {User} from '../../views/DemonstratePage';
-import {Thead} from './thead/Thead';
+import {ViewPortHead} from './ViewPortHead/ViewPortHead';
+import {ViewPortContent} from './ViewPortContent/ViewPortContent';
+import {SearchField} from './SearchField';
 
 export interface RowData {
   id: string;
@@ -75,24 +76,14 @@ function uploadUsersData(users: Array<User>): Array<RowData> {
   });
 }
 
-function ViewPortContent({rowsData, itemHeight}: {rowsData: Array<RowData>; itemHeight: number}): ReactElement {
-  return (
-    <div className='flex flex-col'>
-      {rowsData.map((rowData) => {
-        return <Row key={rowData.id} data={rowData} height={itemHeight} />;
-      })}
-    </div>
-  );
-}
-
 export const VirualScroll: React.FC<VirtualScrollProps> = (props) => {
   const [rowsData, setRowsData] = useState(() => uploadUsersData(props.users));
   const [state, setState] = useState<VirtualScrollState>(() => setInitialState(props, props.users.length));
   const viewportRef = useRef<HTMLTableSectionElement>(null);
+  const [isViewPortEmpty, setIsViewPortEmpty] = useState(false);
   let currentIndex = 0;
 
   function onUpdateSortField(rowDataOption: 'company' | 'name' | 'username', direction: 'up' | 'down') {
-    console.log('onUpdateSortField', direction, rowDataOption);
     const sortedRowsData = rowsData.slice().sort((a, b) => {
       const aValue = a[rowDataOption];
       const bValue = b[rowDataOption];
@@ -113,8 +104,36 @@ export const VirualScroll: React.FC<VirtualScrollProps> = (props) => {
     });
   }
 
+  function handleSearchInput(event: React.UIEvent<HTMLInputElement>) {
+    if (event.currentTarget.value === '') {
+      const initialRowsData = uploadUsersData(props.users);
+      setRowsData([...initialRowsData]);
+      const curData = getViewPortContentData(initialRowsData, currentIndex, state.bufferedItems);
+      setState({
+        ...state,
+        viewPortContentData: [...curData],
+      });
+      setIsViewPortEmpty(false);
+    } else {
+      const filteredRowsData = rowsData.slice().filter((rowData) => {
+        return rowData.name.includes(event.currentTarget.value);
+      });
+      if (filteredRowsData.length === 0) {
+        setIsViewPortEmpty(true);
+      } else {
+        setIsViewPortEmpty(false);
+      }
+      setRowsData([...filteredRowsData]);
+      const curData = getViewPortContentData(filteredRowsData, currentIndex, state.bufferedItems);
+      setState({
+        ...state,
+        viewPortContentData: [...curData],
+      });
+    }
+  }
+
   function onRemoveSortField() {
-    setRowsData(uploadUsersData(props.users));
+    setRowsData([...uploadUsersData(props.users)]);
   }
 
   function getViewPortContentData(rowsData: Array<RowData>, offset: number, limit: number) {
@@ -163,15 +182,20 @@ export const VirualScroll: React.FC<VirtualScrollProps> = (props) => {
 
   return (
     <div className='w-full shadow overflow-hidden rounded-lg relative'>
+      <SearchField label='usename' onInput={handleSearchInput} />
       <div className='w-full'>
-        <Thead onUpdateSortField={onUpdateSortField} onRemoveSortField={onRemoveSortField} />
+        <ViewPortHead onUpdateSortField={onUpdateSortField} onRemoveSortField={onRemoveSortField} />
         <div
-          className='overflow-y-auto block w-full bg-gray-800'
+          className='overflow-y-auto block w-full bg-gray-800  relative'
           style={{height: state?.viewportHeight}}
           ref={viewportRef}
           onScroll={handleScroll}>
           <div style={{height: state?.topPaddingHeight}}></div>
-          <ViewPortContent rowsData={state.viewPortContentData} itemHeight={props.itemHeight} />
+          <ViewPortContent
+            rowsData={state.viewPortContentData}
+            itemHeight={props.itemHeight}
+            isEmpty={isViewPortEmpty}
+          />
           <div style={{height: state?.bottomPaddingHeight}}></div>
         </div>
       </div>

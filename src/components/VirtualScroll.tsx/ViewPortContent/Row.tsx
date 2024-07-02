@@ -1,5 +1,5 @@
 import {ReactElement} from 'react';
-import {RowData} from './VirualScroll';
+import {RowData} from '../VirualScroll';
 
 interface RowProps {
   data: RowData;
