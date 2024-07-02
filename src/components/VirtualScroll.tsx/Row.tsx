@@ -7,7 +7,6 @@ interface RowProps {
 }
 
 export function Row(props: RowProps): ReactElement {
-  console.log(props.data);
   return (
     <div className='text-white w-full flex flex-grow-0 gap-4 ' style={{height: props.height}}>
       <div
