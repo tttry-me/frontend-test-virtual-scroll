@@ -171,12 +171,15 @@ export const VirualScroll: React.FC<VirtualScrollProps> = (props) => {
 
   useEffect(() => {
     if (viewportRef.current !== null) {
-      const fakeEvent = {
-        currentTarget: {
-          scrollTop: 0,
-        },
-      } as React.UIEvent<HTMLTableSectionElement>;
-      handleScroll(fakeEvent);
+      viewportRef.current.scrollTop = state.initialPosition;
+      if (!state.initialPosition) {
+        const fakeEvent = {
+          currentTarget: {
+            scrollTop: 0,
+          },
+        } as React.UIEvent<HTMLTableSectionElement>;
+        handleScroll(fakeEvent);
+      }
     }
   }, []);
 

@@ -13,7 +13,11 @@ export function ViewPortContent({rowsData, itemHeight, isEmpty}: ViewPortContent
     <div className='flex flex-col'>
       {!isEmpty ? (
         rowsData.map((rowData) => {
-          return <Row key={rowData.id} data={rowData} height={itemHeight} />;
+          if (rowData != null) {
+            return <Row key={rowData.id} data={rowData} height={itemHeight} />;
+          } else {
+            return null;
+          }
         })
       ) : (
         <div className='text-gray-500 text-lg absolute left-1/2 top-1/2 uppercase tracking-wide'>Empty</div>
